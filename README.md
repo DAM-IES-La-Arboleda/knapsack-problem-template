@@ -39,7 +39,6 @@ El proyecto está dividido en dos paquetes principales para separar la lógica d
 ### 1. El Techo Teórico (Upper Bound)
 Como calcular la solución perfecta en cada test es muy costoso computacionalmente, el sistema utiliza el **Knapsack Fraccionario** como referencia. 
 
-*   Se ordenan los objetos por densidad de valor (**valor / peso**).
 *   Se llena la mochila permitiendo "trocear" el último objeto para aprovechar el 100% de la capacidad.
 *   Este valor es el **100% teórico**: es físicamente imposible que una solución 0/1 supere este valor.
 
