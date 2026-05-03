@@ -33,7 +33,7 @@ jobs:
         id: run
         run: |
           # Ejecución del programa
-          output=$(java -cp out core.Main secretos/data/private)
+          output=$(java -cp out core.Main secretos/private)
           echo "--- LOG DE SALIDA ---"
           echo "$output"
           
