@@ -1,0 +1,56 @@
+name: Leaderboard Updater
+on:
+  repository_dispatch:
+    types: [update_leaderboard]
+
+jobs:
+  update-json:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Template
+        uses: actions/checkout@v4
+        with:
+          # Usamos tu token privado para tener permisos de escritura
+          token: ${{ secrets.MY_PRIVATE_TOKEN }}
+
+      - name: Actualizar JSON con datos del alumno
+        run: |
+          # EXTRAEMOS LOS DATOS DEL PAYLOAD (El sobre que envió el alumno)
+          # Aquí 'user' es el nombre del alumno que envió el Dispatch
+          USER="${{ github.event.client_payload.user }}"
+          SCORE="${{ github.event.client_payload.score }}"
+          
+          echo "Procesando nota de: $USER"
+          echo "Puntuación recibida: $SCORE"
+
+          # Si el archivo no existe, lo creamos vacío
+          if [ ! -f leaderboard.json ]; then echo "{}" > leaderboard.json; fi
+
+          # Instalamos JQ para manipular el JSON
+          sudo apt-get update && sudo apt-get install -y jq
+          
+          # LÓGICA DE ACTUALIZACIÓN:
+          # 1. Busca al usuario en el JSON.
+          # 2. Si no existe, lo añade con su nota.
+          # 3. Si ya existe, solo actualiza si la nota nueva ($s) es mayor que la vieja.
+          jq --arg u "$USER" --argjson s "$SCORE" \
+          '.[$u] = (if (.[$u] // 0) < $s then $s else .[$u] end)' \
+          leaderboard.json > tmp.json && mv tmp.json leaderboard.json
+
+      - name: Guardar Cambios en el Repositorio
+        env:
+          TOKEN: ${{ secrets.MY_PRIVATE_TOKEN }}
+        run: |
+          git config user.name "Leaderboard Bot"
+          git config user.email "actions@github.com"
+          
+          # Forzamos el uso del token en la URL remota para el push
+          git remote set-url origin https://x-access-token:${TOKEN}@github.com/DAM-IES-La-Arboleda/knapsack-problem-template.git
+          
+          git add leaderboard.json
+          
+          # El [skip ci] es vital para que este commit no dispare otras acciones
+          ALUMNO="${{ github.event.client_payload.user }}"
+          git commit -m "Ranking: $ALUMNO actualizado [skip ci]" || echo "No hay cambios en la puntuación"
+          
+          git push origin main
