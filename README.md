@@ -30,6 +30,7 @@ El proyecto está dividido en dos paquetes principales para separar la lógica d
 │       └── BaseSolver.java         # Aquí debes programar tu estrategia
 ├── tests/             # Archivos .txt de prueba (públicos)
 └── README.md
+```
 
 ## ⚖️ Evaluación de la Heurística
 
