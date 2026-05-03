@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>🏆 Leaderboard Knapsack</title>
+
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #e2e8f0;
+      --accent: #38bdf8;
+      --gold: #facc15;
+      --silver: #cbd5f5;
+      --bronze: #f97316;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    header {
+      text-align: center;
+      padding: 30px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 2.5rem;
+      color: var(--accent);
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th {
+      text-align: left;
+      padding: 12px;
+      font-size: 0.9rem;
+      color: #94a3b8;
+    }
+
+    td {
+      padding: 14px 12px;
+      font-size: 1rem;
+    }
+
+    tr {
+      border-bottom: 1px solid #334155;
+      transition: background 0.2s;
+    }
+
+    tr:hover {
+      background: #334155;
+    }
+
+    .rank {
+      font-weight: bold;
+      width: 60px;
+    }
+
+    .score {
+      text-align: right;
+      font-weight: bold;
+    }
+
+    .gold { color: var(--gold); }
+    .silver { color: var(--silver); }
+    .bronze { color: var(--bronze); }
+
+    .badge {
+      font-size: 1.2rem;
+      margin-right: 8px;
+    }
+
+    .search {
+      margin-bottom: 15px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      outline: none;
+      background: #334155;
+      color: white;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.8rem;
+      color: #64748b;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>🏆 Leaderboard Knapsack</h1>
+  <p>Ranking automático de heurísticas</p>
+</header>
+
+<div class="container">
+  <div class="card">
+
+    <div class="search">
+      <input type="text" id="search" placeholder="Buscar alumno...">
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Alumno</th>
+          <th class="score">Puntos</th>
+        </tr>
+      </thead>
+      <tbody id="tabla"></tbody>
+    </table>
+
+  </div>
+
+  <div class="footer">
+    Actualización automática · GitHub Actions
+  </div>
+</div>
+
+<script>
+let dataGlobal = [];
+
+function getMedal(index) {
+  if (index === 0) return '<span class="badge gold">🥇</span>';
+  if (index === 1) return '<span class="badge silver">🥈</span>';
+  if (index === 2) return '<span class="badge bronze">🥉</span>';
+  return '';
+}
+
+function render(data) {
+  const tabla = document.getElementById('tabla');
+  tabla.innerHTML = '';
+
+  data.forEach(([name, score], index) => {
+    const medal = getMedal(index);
+
+    const row = `
+      <tr>
+        <td class="rank">${index + 1}</td>
+        <td>${medal}${name}</td>
+        <td class="score">${score}</td>
+      </tr>
+    `;
+
+    tabla.innerHTML += row;
+  });
+}
+
+fetch('leaderboard.json')
+  .then(res => res.json())
+  .then(data => {
+    dataGlobal = Object.entries(data);
+
+    dataGlobal.sort((a, b) => b[1] - a[1]);
+
+    render(dataGlobal);
+  })
+  .catch(() => {
+    document.body.innerHTML += "<p>Error cargando leaderboard</p>";
+  });
+
+// 🔍 Buscador
+document.getElementById('search').addEventListener('input', (e) => {
+  const term = e.target.value.toLowerCase();
+
+  const filtered = dataGlobal.filter(([name]) =>
+    name.toLowerCase().includes(term)
+  );
+
+  render(filtered);
+});
+
+// 🔄 Auto-refresh cada 30s
+setInterval(() => location.reload(), 30000);
+</script>
+
+</body>
+</html>
