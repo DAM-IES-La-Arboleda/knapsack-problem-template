@@ -1,0 +1,65 @@
+name: Autograding
+on: [push]
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Descargamos el código del alumno
+      - name: Checkout alumno
+        uses: actions/checkout@v4
+
+      # 2. Preparamos el entorno de Java
+      - name: Configurar Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # 3. Compilamos todo el proyecto
+      - name: Compilar
+        run: javac -d out src/core/*.java src/solution/*.java
+
+      # 4. Traemos los tests privados usando tu Token Maestro
+      - name: Descargar tests privados
+        env:
+          TOKEN: ${{ secrets.MY_PRIVATE_TOKEN }}
+        run: |
+          git clone https://x-access-token:$TOKEN@github.com/DAM-IES-La-Arboleda/knapsack-problem-private-tests secretos
+
+      # 5. Ejecutamos la lógica de evaluación
+      - name: Ejecutar evaluación
+        id: run
+        run: |
+          # Ejecución del programa
+          output=$(java -cp out core.Main secretos/data/private)
+          echo "--- LOG DE SALIDA ---"
+          echo "$output"
+          
+          # Extraemos el valor numérico (ej: 85.50)
+          score=$(echo "$output" | grep "FINAL_SCORE=" | cut -d '=' -f2 | xargs)
+
+          if [ -z "$score" ]; then
+            echo "❌ ERROR: No se detectó FINAL_SCORE en la consola"
+            exit 1
+          fi
+
+          # Guardamos la nota en el entorno global del Action
+          echo "SCORE=$score" >> $GITHUB_ENV
+          echo "Puntuación capturada: $score"
+
+      # 6. ENVIAR DATOS AL LEADERBOARD (El paso que ha cambiado)
+      - name: Notificar al Leaderboard Central
+        if: success()
+        env:
+          TOKEN: ${{ secrets.MY_PRIVATE_TOKEN }}
+        run: |
+          
+          curl -L \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/DAM-IES-La-Arboleda/knapsack-problem-template/dispatches \
+            -d "{\"event_type\": \"update_leaderboard\", \"client_payload\": {\"user\": \"${{ github.actor }}\", \"score\": \"${{ env.SCORE }}\"}}"
