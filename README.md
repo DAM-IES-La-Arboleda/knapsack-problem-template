@@ -28,7 +28,7 @@ El proyecto está dividido en dos paquetes principales para separar la lógica d
 │   │   └── Main.java               # Orquestador de la evaluación y tests
 │   └── solution       # ✅ TU ZONA DE TRABAJO
 │       └── BaseSolver.java         # Aquí debes programar tu estrategia
-├── tests/             # Archivos .txt de prueba (públicos)
+├── data/public             # Archivos .txt de prueba (públicos)
 └── README.md
 ```
 
